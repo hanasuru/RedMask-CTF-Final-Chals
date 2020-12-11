@@ -1,0 +1,7 @@
+- Upload waifu.jpg
+- Upload poc.jpg
+- Nyalakan burp suite dan intercept
+- Upload waifu.jpg lalu intercept
+- Ubah nama file menjadi `waifu.jpg svg:poc.jpg`
+- Forward request di burpsuite
+- Akses `/uploads/rce.php` (tergantung payload)
