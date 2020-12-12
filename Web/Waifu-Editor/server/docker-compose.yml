@@ -1,8 +1,9 @@
 version: '2'
 services:
- web:
+ waifu-editor-web:
    build: .
    volumes:
      - ./app:/var/www/html
+   restart: on-failure
    ports:
      - "11011:80"
