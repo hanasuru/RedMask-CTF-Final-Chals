@@ -1,9 +1,10 @@
 version: '2'
 services:
- web:
+ weeb-calculator-web:
    build: .
    volumes:
     - ./app:/var/www/html
     - ./php.ini:/etc/php/7.4/apache2/php.ini
+   restart: on-failure
    ports:
      - "11012:80"
