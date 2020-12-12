@@ -7,3 +7,10 @@ services:
    restart: on-failure
    ports:
      - "11011:80"
+   networks:
+     - waifu-editor-network
+
+networks:
+  waifu-editor-network:
+    driver: overlay
+    attachable: true
