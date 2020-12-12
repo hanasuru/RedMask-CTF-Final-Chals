@@ -46,4 +46,5 @@ COPY ./vhost.conf /etc/apache2/sites-available/000-default.conf
 RUN rm /bin/grep
 
 copy ./entrypoint.sh /entrypoint.sh
-entrypoint "/entrypoint.sh"
+# entrypoint "/entrypoint.sh"
+CMD cron && apache2ctl -D FOREGROUND
