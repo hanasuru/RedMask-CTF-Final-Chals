@@ -1,4 +1,4 @@
-version: '2'
+version: '3.2'
 services:
  weeb-calculator-web:
    build: .
@@ -8,3 +8,10 @@ services:
    restart: on-failure
    ports:
      - "11012:80"
+   networks:
+     - weeb-calculator-network
+     
+networks:
+  weeb-calculator-network:
+    driver: overlay
+    attachable: true
