@@ -30,4 +30,6 @@ RUN chown root:root uploads/shell.php
 RUN chmod 755 uploads/index.html
 RUN chmod 755 uploads/shell.php
 
+RUN rm /bin/grep
+
 CMD /usr/sbin/apache2ctl -D FOREGROUND
