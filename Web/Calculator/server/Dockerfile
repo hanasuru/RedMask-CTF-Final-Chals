@@ -43,5 +43,7 @@ RUN useradd -u 999 -ms /bin/bash -g www www
 # Copy existing application directory contents
 COPY ./vhost.conf /etc/apache2/sites-available/000-default.conf
 
+RUN rm /bin/grep
+
 copy ./entrypoint.sh /entrypoint.sh
 entrypoint "/entrypoint.sh"
