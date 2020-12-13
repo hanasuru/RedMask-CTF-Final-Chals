@@ -14,7 +14,7 @@
 #define MAPPING_SIZE 0x100000
 
 char *USER_STACK_MEM[MAPPING_SIZE] = {0};
-const char flag[] = "redmask{ez_pz__lem0n_squeezY_1333333333333337}";
+const char flag[] = "redmask{ez_pz__lem0n_squeezY_fix3fix3fix3fix7}";
 char *cache[6] = {0};
 
 void handler() {
