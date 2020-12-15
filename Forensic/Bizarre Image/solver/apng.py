@@ -1,82 +1,99 @@
-from base64 import b32encode as base32
-from collections import OrderedDict
-from struct import unpack, pack
-from random import shuffle
 from textwrap import wrap
-from zlib import crc32
 from PIL import Image
+from zlib import crc32
 
-class PNGReader(object):
-	def __init__(self, path):
-		self.path = path
-		self.info = OrderedDict()
+import struct
 
-	def getInfo(self):
-		if not self.info:
-			with open(self.path, 'rb') as img:
-				buf = img.read()
-				pos = 8; i = 0
+class Chunk:
+    def __init__(self, data, pos):
+        self.size = self.get_size(data)
+        self.type = self.get_type(data)
+        self.data = self.get_data(data)
+        self.crc  = self.get_crc(data)
 
-				while True:
-					try:
-						data  = self.iterate(buf, pos)
-						exist = self.info.get(data['type'], list())						
-						if not exist:
-							self.info[data['type']] = exist
-						exist.append(data)
-						# print data['type']
-						pos += data['pos'] + 12
-						i+=1
-					except:
-						break
-		return self.info
+    def get_size(self, data):
+        return data[:4]
 
-	def calcCRC(self, text):
-		crc  = crc32(text) % (1<<32)
-		return pack('>I', crc)
+    def get_type(self, data):
+        return data[4:8]
 
-	def iterate(self, buf, pos):
-		data = OrderedDict()
-		size = unpack('!I', buf[pos:pos+4])[0]
-		data['pos']  = size
-		data['size'] = buf[pos:pos+4]
-		data['type'] = buf[pos+4:pos+8]
-		data['data'] = buf[pos+8:pos+8+size]
-		data['crc']  = buf [pos+8+size: pos+size+12]
-		return data
+    def get_data(self, data):
+        return data[8:-4]
 
-	def editChunk(self, count, _type, _sect, data):
-		self.info[_type][count][_sect] = data
-		raw = self.info[_type][count]['type'] +\
-				  self.info[_type][count]['data'] 
-		self.info[_type][count]['crc'] = self.calcCRC(raw)
+    def get_crc(self, data):
+        return data[-4:]
 
-	def calcCRC(self, text):
-		crc  = crc32(text) % (1<<32)
-		return pack('>I', crc)
+    @property
+    def chunks(self):
+        return [self.size, self.type, self.data + self.crc]
 
-	def save(self, path):
-		result = '\x89\x50\x4E\x47\x0D\x0A\x1A\x0A'
-		for _ in self.info.values():
-			for __ in _:
-				result += ''.join(__.values()[1:])
-		open(path,'wb').write(result)
+    @property
+    def raw(self):
+        return ''.join(self.chunks)
 
-def reSort(data, offset):
-	chunk = dict()
-	for _ in data[offset:]:
-		seq_num = unpack('!I', _['data'][:4])[0]
-		chunk[seq_num] = _
-	return chunk.values()
+def calc_crc32(data):
+    checksum = crc32(data) % (1<<32)
+    return struct.pack('>I', checksum)
 
-png  = PNGReader('flag.png')
-png.getInfo()
+def parse_chunk(pos, length, content):
+    begin, end = (pos, pos+length)
+    content = content[begin: end]
+    pos = len(content)
 
-fctl = reSort(png.info['fcTL'], 1)
-fdat = reSort(png.info['fdAT'], 0)
+    return Chunk(content, pos), pos
 
-data = [__ for _ in zip(fctl, fdat) for __ in _]
-png.info['fcTL'][1:] = []
-png.info['fdAT'] = data
-png.editChunk(0, 'acTL', 'data', '\x00\x00\x01\x61\x00\x00\x00\x00')
-png.save('recovered.png')
+def bytes_to_long(data):
+    return struct.unpack('!I', data)[0]
+
+def long_to_bytes(data):
+    return struct.pack('!I', data)
+
+def iterate_chunk(content):
+    chunks = []
+    pos = 8
+
+    while pos < len(content):
+        try:
+            begin, end = (pos, pos+4)
+            length = struct.unpack('!I', content[begin: end])[0]
+            res = parse_chunk(pos, length + 12, content)
+
+            chunks.append(res[0])
+            pos += res[1]
+        except struct.error:
+            break
+
+    return chunks
+
+def resort(chunks, base):
+    data = dict()
+
+    for e,chunk in chunks:
+        seq = bytes_to_long(chunk.data[:4])
+        data[seq] = (e, chunk)
+        
+    offset = min(data.values())[0]
+    for e,chunk in data.values():
+        base[offset] = chunk
+        offset += 2
+    return base
+
+with open('fixed.png') as img:
+    image = img.read()
+    chunks = iterate_chunk(image)
+    head = image[:8]
+
+fctl = [(e,i) for e,i in enumerate(chunks) if i.type == 'fcTL']
+fdat = [(e,i) for e,i in enumerate(chunks) if i.type == 'fdAT']
+
+chunks = resort(fctl, chunks)
+chunks = resort(fdat, chunks)
+
+# Write 881 Frame on acTL
+chunks[1].data = long_to_bytes(len(fctl)) + '\x00' * 4
+chunks[1].crc = calc_crc32(chunks[1].type + chunks[1].data)
+
+with open('fixed.png','wb') as f:
+    f.write(head)
+    for chunk in chunks:
+        f.write(chunk.raw)
