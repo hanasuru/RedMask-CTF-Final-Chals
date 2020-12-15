@@ -6,6 +6,11 @@ Private Hub
 >I deployed my own docker hub the other day. After a while, I started to push some webservices. But then something fishy happened <br><br>https://drive.google.com/file/d/10IF7-T42ZgzjN5kJwLaXu1VLawFmX8Hq/view?usp=sharing
 ---
 
+## Hint
+- Do you know that `Docker manifest` file also gives users additional information from a `Dockerfile`?
+- Based on my understanding, there were some weird traffics from `DNS TXT query` that includes Blind SSTI on `Python2`
+
+---
 ## Penjelasan Penyelesaian Soal
 - Diberikan dua buah `network packet`, yakni `blob.pcap` & `log.pcap`
 - Pada `blob.pcap` diperoleh manifest data beserta `rootfs` dari Docker Images yang memuat flask app, binary `_`, dan private key `key`.
@@ -16,7 +21,18 @@ Private Hub
 - Hasilnya, diperoleh `flag.zip` & `password` yang memuat informasi dari `flag`
 
 ## Solver
-On-progress
+
+```bash
+❯ python2 sv-intended.py
+[+] Saving flag.zip
+[+] Saving password
+
+❯ 7z x -p$(cat password) flag.zip 
+
+❯ cat flag.txt
+redmask{http_api_reque5t_0ver_quer1ed_txt_d0main_n4me_5erv3r}
+
+```
 
 <br>
 
