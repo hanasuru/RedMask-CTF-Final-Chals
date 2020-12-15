@@ -18,6 +18,5 @@ result = ''.join(data)[64:]
 for i in extras:
     result = result.replace(i, '')
 
-print extras
-with open('fixed', 'wb') as f:
+with open('fixed.png', 'wb') as f:
     f.write(result.decode('hex'))
