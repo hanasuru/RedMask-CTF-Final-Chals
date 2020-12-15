@@ -38,7 +38,8 @@ Bizarre Image
 fixed.png: PNG image data, 580 x 580, 8-bit colormap, non-interlaced
 
 ❯ mkdir frames && cp fixed.png frames/
-❯ cd frames && apngdis fixed.png
+❯ cd frames && python2 apng.py 
+❯ apngdis fixed.png
 
 APNG Disassembler 2.9
 
